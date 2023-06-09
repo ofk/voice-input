@@ -1,0 +1,11 @@
+{
+  "root": true,
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "extends": "@ofk/eslint-config-recommend"
+}
