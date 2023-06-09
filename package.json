@@ -22,5 +22,9 @@
     "prettier": "^2.8.8",
     "prettier-package-json": "^2.8.0"
   },
-  "keywords": []
+  "keywords": [],
+  "lint-staged": {
+    "package.json": "prettier-package-json --write",
+    "*.{md,json,html}": "prettier --write"
+  }
 }
