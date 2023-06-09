@@ -7,9 +7,12 @@
   "author": "",
   "main": "index.js",
   "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc -p tsconfig.build.json",
     "lint": "run-s -c lint:*",
     "lint:package-json": "prettier-package-json -l",
     "lint:prettier": "prettier --check .",
+    "lint:tsc": "tsc",
     "lint-fix": "run-s -c lint-fix:*",
     "lint-fix:package-json": "prettier-package-json --write",
     "lint-fix:prettier": "prettier --write .",
