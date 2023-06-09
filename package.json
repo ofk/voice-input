@@ -13,6 +13,7 @@
     "lint-fix": "run-s -c lint-fix:*",
     "lint-fix:package-json": "prettier-package-json --write",
     "lint-fix:prettier": "prettier --write .",
+    "prepare": "husky install",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
