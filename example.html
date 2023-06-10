@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>voice-input example</title>
+    <style>
+      [data-voice-input]::after {
+        content: ' on';
+      }
+      [data-voice-input='recording']::after {
+        content: ' off';
+      }
+    </style>
+  </head>
+  <body>
+    <button data-voice-input data-voice-input-focus="textarea"><span>mic</span></button>
+    <div>
+      <textarea>textarea</textarea>
+    </div>
+    <div>
+      <div contenteditable>contenteditable</div>
+    </div>
+    <div id="react"></div>
+    <!-- <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script>
+      const Echo = () => {
+        const [value, setValue] = React.useState('react controlled');
+        return React.createElement(
+          React.Fragment,
+          {},
+          React.createElement('textarea', {
+            value,
+            onChange: (evt) => {
+              setValue(evt.target.value);
+            },
+          }),
+          React.createElement('div', {}, value)
+        );
+      };
+      ReactDOM.createRoot(document.getElementById('react')).render(React.createElement(Echo));
+    </script> -->
+    <script type="module">
+      import { setup } from './src';
+      setup({ keyboardShortcut: 'Alt+V' });
+    </script>
+  </body>
+</html>

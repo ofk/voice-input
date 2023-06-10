@@ -1,10 +1,10 @@
 {
-  "private": true,
   "name": "voice-input",
-  "version": "0.0.1",
-  "description": "",
-  "license": "UNLICENSED",
-  "author": "",
+  "version": "1.0.0",
+  "description": "voice-input makes it easy to add speech recognition input.",
+  "license": "MIT",
+  "author": "ofk <ofkjpn+npm@gmail.com> (https://github.com/ofk/)",
+  "repository": "ofk/voice-input",
   "main": "dist/voice-input.js",
   "files": [
     "dist",
