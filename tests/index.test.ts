@@ -1,7 +1,7 @@
-import { noop } from '../src';
+import { isSupported } from '../src';
 
-describe('index.ts', () => {
-  test('noop', () => {
-    expect(typeof noop).toBe('function');
+describe('isSupported', () => {
+  it('returns bool value', () => {
+    expect(typeof isSupported).toBe('boolean');
   });
 });
