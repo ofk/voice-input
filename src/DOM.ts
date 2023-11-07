@@ -53,6 +53,9 @@ export function testKeyboardShortcut(event: KeyboardEvent, keyboardShortcut: str
       : event.ctrlKey === keys.includes('ctrl') && event.metaKey === keys.includes('meta')) &&
     event.altKey === keys.includes('alt') &&
     event.shiftKey === keys.includes('shift') &&
-    event.code.replace(/^(?:Key|Digit)/, '').toLowerCase() === keys[keys.length - 1]
+    event.code
+      .replace(/^(?:Key|Digit)/, '')
+      .replace(/^(Alt|Control|Meta)(?:Left|Right)$/, '$1')
+      .toLowerCase() === keys[keys.length - 1]
   );
 }
