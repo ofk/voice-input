@@ -13,7 +13,7 @@
     </style>
   </head>
   <body>
-    <button data-voice-input data-voice-input-focus="textarea"><span>mic</span></button>
+    <button data-voice-input data-voice-input-focus="textarea">mic</button>
     <div>
       <textarea>textarea</textarea>
     </div>
@@ -42,7 +42,7 @@
     </script> -->
     <script type="module">
       import { setup } from '../src';
-      setup({ keyboardShortcut: 'Alt' });
+      setup({ keyboardShortcut: 'Alt', keyboardShortcutPressing: true });
     </script>
   </body>
 </html>

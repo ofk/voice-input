@@ -35,23 +35,3 @@ export function registerGlobalEvent<K extends keyof WindowEventMap>(
     window.removeEventListener(type, listener);
   };
 }
-
-const isMac = /Mac|iPod|iPhone|iPad/.test(
-  typeof navigator !== 'undefined' ? navigator.platform : '',
-);
-
-export function testKeyboardShortcut(event: KeyboardEvent, keyboardShortcut: string): boolean {
-  // TODO: Not a strict implementation.
-  const keys = keyboardShortcut.toLowerCase().split('+');
-  return (
-    (keys.includes('mod')
-      ? event[isMac ? 'metaKey' : 'ctrlKey']
-      : event.ctrlKey === keys.includes('ctrl') && event.metaKey === keys.includes('meta')) &&
-    event.altKey === keys.includes('alt') &&
-    event.shiftKey === keys.includes('shift') &&
-    event.code
-      .replace(/^(?:Key|Digit)/, '')
-      .replace(/^(Alt|Control|Meta)(?:Left|Right)$/, '$1')
-      .toLowerCase() === keys[keys.length - 1]
-  );
-}
