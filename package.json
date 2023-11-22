@@ -1,6 +1,6 @@
 {
   "name": "voice-input",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "voice-input makes it easy to add speech recognition input.",
   "license": "MIT",
   "author": "ofk <ofkjpn+npm@gmail.com> (https://github.com/ofk/)",
