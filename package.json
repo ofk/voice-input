@@ -5,7 +5,8 @@
   "license": "MIT",
   "author": "ofk <ofkjpn+npm@gmail.com> (https://github.com/ofk/)",
   "repository": "ofk/voice-input",
-  "main": "dist/voice-input.js",
+  "type": "module",
+  "main": "dist/voice-input.cjs",
   "files": [
     "dist",
     "src"
@@ -13,6 +14,7 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "microbundle --tsconfig tsconfig.build.json",
+    "dev": "npx parcel serve --dist-dir .parcel-dist 'examples/index.html'",
     "lint": "run-s -c lint:*",
     "lint:eslint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "lint:package-json": "prettier-package-json -l",
