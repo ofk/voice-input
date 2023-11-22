@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
@@ -13,7 +13,7 @@
     </style>
   </head>
   <body>
-    <button data-voice-input data-voice-input-focus="textarea"><span>mic</span></button>
+    <button data-voice-input data-voice-input-focus="textarea">mic</button>
     <div>
       <textarea>textarea</textarea>
     </div>
@@ -41,8 +41,8 @@
       ReactDOM.createRoot(document.getElementById('react')).render(React.createElement(Echo));
     </script> -->
     <script type="module">
-      import { setup } from './src';
-      setup({ keyboardShortcut: 'Alt' });
+      import { setup } from '../src';
+      setup({ keyboardShortcut: 'Alt', keyboardShortcutPressing: true });
     </script>
   </body>
 </html>
