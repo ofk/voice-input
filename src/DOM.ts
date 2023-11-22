@@ -26,7 +26,7 @@ export function focusElement(elem: HTMLElement): void {
 
 export function registerGlobalEvent<K extends keyof WindowEventMap>(
   type: K,
-  fn: (ev: WindowEventMap[K]) => boolean | void | undefined
+  fn: ((ev: WindowEventMap[K]) => void) | ((ev: WindowEventMap[K]) => boolean | undefined),
 ): () => void {
   const listener = (ev: WindowEventMap[K]): void => {
     if (fn(ev) === false) {
@@ -41,7 +41,7 @@ export function registerGlobalEvent<K extends keyof WindowEventMap>(
 }
 
 const isMac = /Mac|iPod|iPhone|iPad/.test(
-  typeof navigator !== 'undefined' ? navigator.platform : ''
+  typeof navigator !== 'undefined' ? navigator.platform : '',
 );
 
 export function testKeyboardShortcut(event: KeyboardEvent, keyboardShortcut: string): boolean {

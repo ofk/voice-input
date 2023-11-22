@@ -71,7 +71,7 @@ const defaultSetupButtonShortcut: VoiceInputOptions['setupButtonShortcut'] = (fn
 
 const defaultUpdateButtonShortcutAttribute: VoiceInputOptions['updateButtonShortcutAttribute'] = (
   attribute,
-  state
+  state,
 ) => {
   document.querySelectorAll(`[${attribute}]`).forEach((elem) => {
     elem.setAttribute(attribute, state.recording ? 'recording' : 'stopped');

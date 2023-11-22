@@ -10,7 +10,7 @@ export type VoiceRecognizerInstance = [
   finalTranscript: string,
   interimTranscript: string,
   onResult?: (transcript: string, interim?: boolean) => void,
-  onStateChange?: (isStopped: boolean) => void
+  onStateChange?: (isStopped: boolean) => void,
 ];
 
 const kRecognition = 0;
@@ -30,7 +30,7 @@ function voiceRecognizerStateChange(instance: VoiceRecognizerInstance, isStopped
 export function voiceRecognizerNew(
   lang = '',
   onResult?: VoiceRecognizerInstance[4],
-  onStateChange?: VoiceRecognizerInstance[5]
+  onStateChange?: VoiceRecognizerInstance[5],
 ): VoiceRecognizerInstance {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const recognition = new Recognition!();

@@ -18,7 +18,9 @@ interface ModalProps {
   children?: string;
 }
 
-type SetupFunction<E extends Event> = (fn: (event: E) => boolean | undefined | void) => () => void;
+type SetupFunction<E extends Event> = (
+  fn: ((event: E) => void) | ((event: E) => boolean | undefined),
+) => () => void;
 
 export interface VoiceInputOptions {
   lang?: string;
@@ -92,7 +94,7 @@ export class VoiceInput {
             updateButtonShortcutAttribute?.(buttonShortcutAttribute, state);
           }
           onStateChange?.(state);
-        }
+        },
       );
 
       this.X.push(() => {
@@ -114,7 +116,7 @@ export class VoiceInput {
               }
             }
             return false;
-          })
+          }),
         );
       }
 
@@ -124,7 +126,7 @@ export class VoiceInput {
             if (!testKeyboardShortcut(event, keyboardShortcut)) return true;
             this.toggle();
             return false;
-          })
+          }),
         );
       }
 
@@ -134,7 +136,7 @@ export class VoiceInput {
             if (!testKeyboardShortcut(event, confirmKeyboarShortcut) || !this.R) return true;
             voiceRecognizerConfirm(this.R);
             return false;
-          })
+          }),
         );
       }
     } catch (e) {
