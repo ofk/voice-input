@@ -1,6 +1,8 @@
 /* eslint-disable no-param-reassign */
 
-import { Recognition } from './DOM';
+export const VoiceRecognition =
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
 // The class is written in C-style for minification optimization.
 
@@ -33,7 +35,7 @@ export function voiceRecognizerNew(
   onStateChange?: VoiceRecognizerInstance[5],
 ): VoiceRecognizerInstance {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const recognition = new Recognition!();
+  const recognition = new VoiceRecognition!();
   const instance: VoiceRecognizerInstance = [recognition, true, '', '', onResult, onStateChange];
   recognition.continuous = true;
   recognition.interimResults = true;
@@ -66,7 +68,7 @@ export function voiceRecognizerNew(
   };
   recognition.onerror = (event): void => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    console.error(`${Recognition!.name} error: ${event.error}`);
+    console.error(`${VoiceRecognition!.name} error: ${event.error}`);
     voiceRecognizerStateChange(instance, true);
   };
   return instance;

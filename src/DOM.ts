@@ -1,7 +1,3 @@
-export const Recognition =
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
-
 export function isTextField(elem: Element): elem is HTMLInputElement | HTMLTextAreaElement {
   return elem.tagName === 'INPUT' || elem.tagName === 'TEXTAREA';
 }

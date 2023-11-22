@@ -1,4 +1,4 @@
-import { Recognition, focusElement, isTextField, registerGlobalEvent } from './DOM';
+import { focusElement, isTextField, registerGlobalEvent } from './DOM';
 import type { VoiceInputOptions } from './VoiceInput';
 import {
   VoiceInput,
@@ -17,6 +17,7 @@ import {
   kUpdateButtonShortcutAttribute,
   kUpdateModal,
 } from './VoiceInput';
+import { VoiceRecognition } from './VoiceRecognizer';
 
 let instance: VoiceInput | undefined;
 
@@ -118,6 +119,6 @@ export function setup({
   return instance;
 }
 
-export const isSupported = !!Recognition;
+export const isSupported = !!VoiceRecognition;
 
 export { VoiceInput };
