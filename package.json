@@ -30,7 +30,8 @@
   },
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@types/dom-speech-recognition": "^0.0.4"
+    "@types/dom-speech-recognition": "^0.0.4",
+    "dom-event-key": "^1.0.1"
   },
   "devDependencies": {
     "@ofk/eslint-config-recommend": "^6.1.2",
