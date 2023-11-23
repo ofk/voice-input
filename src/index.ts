@@ -148,8 +148,9 @@ export function setup({
                     focusElement(focusElem);
                   }
                 }
+                return false;
               }
-              return false;
+              return true;
             });
             return {
               dispose,
