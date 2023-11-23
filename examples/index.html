@@ -13,7 +13,10 @@
     </style>
   </head>
   <body>
-    <button data-voice-input data-voice-input-focus="textarea">mic</button>
+    <h1>voice-input example</h1>
+    <p>
+      <button data-voice-input data-voice-input-focus="textarea">mic</button>
+    </p>
     <div>
       <textarea>textarea</textarea>
     </div>
@@ -21,7 +24,7 @@
       <div contenteditable>contenteditable</div>
     </div>
     <div id="react"></div>
-    <!-- <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script>
       const Echo = () => {
@@ -35,14 +38,17 @@
               setValue(evt.target.value);
             },
           }),
-          React.createElement('div', {}, value)
+          React.createElement('div', {}, value),
         );
       };
       ReactDOM.createRoot(document.getElementById('react')).render(React.createElement(Echo));
-    </script> -->
+    </script>
     <script type="module">
       import { setup } from '../src';
-      setup({ keyboardShortcut: 'Alt', keyboardShortcutPressing: true });
+      setup({
+        keyboardShortcut: 'Alt', // custom shortcutkey
+        keyboardShortcutPressing: true, // activate when pressed
+      });
     </script>
   </body>
 </html>
