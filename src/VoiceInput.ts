@@ -1,4 +1,3 @@
-import { focusElement, isTextField } from './DOM';
 import type { VoiceRecognizerInstance } from './VoiceRecognizer';
 import {
   STATE_STARTED,
@@ -19,34 +18,15 @@ export interface VoiceInputPlugin {
 
 export interface VoiceInputOptions {
   lang?: string;
-  insertInput?: (text: string) => boolean;
   plugins?: (VoiceInputPlugin | null | ((voiceInput: VoiceInput) => VoiceInputPlugin | null))[];
 }
-
-export const kLang = 'lang';
-export const kInsertInput = 'insertInput';
-export const kPlugins = 'plugins';
-
-const defaultInsertInput: NonNullable<VoiceInputOptions['insertInput']> = (text) => {
-  const elem = document.activeElement as HTMLElement | null;
-  // It works with React controlled element.
-  if (elem && (isTextField(elem) || elem.contentEditable)) {
-    focusElement(elem);
-    return elem.ownerDocument.execCommand('insertText', false, text);
-  }
-  return false;
-};
 
 export class VoiceInput {
   R?: VoiceRecognizerInstance; // recognizer
 
   P: VoiceInputPlugin[]; // plugins
 
-  constructor({
-    [kLang]: lang,
-    [kInsertInput]: insertInput = defaultInsertInput,
-    [kPlugins]: plugins = [],
-  }: VoiceInputOptions) {
+  constructor({ lang, plugins = [] }: VoiceInputOptions) {
     this.P = plugins
       .map((plugin) => (typeof plugin === 'function' ? plugin(this) : plugin))
       .filter((plugin): plugin is VoiceInputPlugin => !!plugin);
@@ -63,9 +43,6 @@ export class VoiceInput {
               plugin.onFinish?.(transcript); // TODO: Rename onConfirm
             }
           });
-          if (!interim) {
-            insertInput(transcript);
-          }
         },
         (state): void => {
           this.P.forEach((plugin) => {

@@ -1,13 +1,14 @@
 import { equalEventKey } from 'dom-event-key';
 
-import { focusElement, registerGlobalEvent } from './DOM';
+import { focusElement, isTextField, registerGlobalEvent } from './DOM';
 import type { VoiceInputOptions, VoiceInputPlugin } from './VoiceInput';
-import { VoiceInput, kInsertInput, kLang, kPlugins } from './VoiceInput';
+import { VoiceInput } from './VoiceInput';
 import { VoiceRecognition, voiceRecognizerConfirm } from './VoiceRecognizer';
 
 let instance: VoiceInput | undefined;
 
 export interface SetupOptions extends Partial<VoiceInputOptions> {
+  insertInput?: (text: string) => boolean;
   modal?: boolean;
   modalProps?: {
     className?: string;
@@ -19,6 +20,16 @@ export interface SetupOptions extends Partial<VoiceInputOptions> {
   buttonShortcutAttribute?: string;
   buttonShortcutFocusAttribute?: string;
 }
+
+const defaultInsertInput: NonNullable<SetupOptions['insertInput']> = (text) => {
+  const elem = document.activeElement as HTMLElement | null;
+  // It works with React controlled element.
+  if (elem && (isTextField(elem) || elem.contentEditable)) {
+    focusElement(elem);
+    return elem.ownerDocument.execCommand('insertText', false, text);
+  }
+  return false;
+};
 
 const defaultModalProps: SetupOptions['modalProps'] = {
   className: 'voice-input-modal',
@@ -45,9 +56,9 @@ const defaultModalProps: SetupOptions['modalProps'] = {
 };
 
 export function setup({
-  [kLang]: lang = navigator.language,
-  [kInsertInput]: insertInput,
-  [kPlugins]: plugins = [],
+  lang = navigator.language,
+  plugins = [],
+  insertInput = defaultInsertInput,
   modal = true,
   modalProps = defaultModalProps,
   keyboardShortcut = 'Alt+v',
@@ -58,10 +69,10 @@ export function setup({
 }: SetupOptions = {}): VoiceInput {
   instance?.dispose();
   instance = new VoiceInput({
-    [kLang]: lang,
-    [kInsertInput]: insertInput,
-    [kPlugins]: [
+    lang,
+    plugins: [
       ...plugins,
+      { onFinish: insertInput },
       modal
         ? (): VoiceInputPlugin => {
             let div: HTMLDivElement | undefined;
