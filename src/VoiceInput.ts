@@ -70,6 +70,9 @@ export class VoiceInput {
             plugin.onStateChange?.({ recording: state === STATE_STARTED });
           });
         },
+        ({ error }): void => {
+          console.error('[VoiceInput]', error);
+        },
       );
     } catch (e) {
       console.error(e);

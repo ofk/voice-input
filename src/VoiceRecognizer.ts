@@ -13,6 +13,7 @@ export type VoiceRecognizerInstance = [
   interimTranscript: string,
   onResult?: (transcript: string, interim?: boolean) => void,
   onStateChange?: (state: number) => void,
+  onError?: (error: SpeechRecognitionErrorEvent) => void,
 ];
 
 const kRecognition = 0;
@@ -21,6 +22,7 @@ const kFinalTranscript = 2;
 const kInterimTranscript = 3;
 const kOnResult = 4;
 const kOnStateChange = 5;
+const kOnError = 6;
 
 export const STATE_UNSTARTED = -1;
 export const STATE_STARTED = 0;
@@ -37,6 +39,7 @@ export function voiceRecognizerNew(
   lang = '',
   onResult?: VoiceRecognizerInstance[4],
   onStateChange?: VoiceRecognizerInstance[5],
+  onError?: VoiceRecognizerInstance[6],
 ): VoiceRecognizerInstance {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const recognition = new VoiceRecognition!();
@@ -47,6 +50,7 @@ export function voiceRecognizerNew(
     '',
     onResult,
     onStateChange,
+    onError,
   ];
   recognition.continuous = true;
   recognition.interimResults = true;
@@ -78,9 +82,8 @@ export function voiceRecognizerNew(
     if (instance[kState] === STATE_STARTED) instance[kRecognition].start();
   };
   recognition.onerror = (event): void => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    console.error(`${VoiceRecognition!.name} error: ${event.error}`);
     voiceRecognizerStateChange(instance, STATE_STOPPED);
+    instance[kOnError]?.(event);
   };
   return instance;
 }
