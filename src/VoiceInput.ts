@@ -11,8 +11,9 @@ import {
 
 export interface VoiceInputPlugin {
   dispose?: () => void;
+  onResult?: (transcript: string, interim: boolean) => void;
   onUpdate?: (transcript: string) => void;
-  onFinish?: () => void;
+  onFinish?: (transcript: string) => void;
   onStateChange?: (state: { recording: boolean }) => void;
 }
 
@@ -54,14 +55,15 @@ export class VoiceInput {
       this.R = voiceRecognizerNew(
         lang,
         (transcript, interim): void => {
-          if (interim) {
-            this.P.forEach((plugin) => {
-              plugin.onUpdate?.(transcript);
-            });
-          } else {
-            this.P.forEach((plugin) => {
-              plugin.onFinish?.();
-            });
+          this.P.forEach((plugin) => {
+            plugin.onResult?.(transcript, interim);
+            if (interim) {
+              plugin.onUpdate?.(transcript); // TODO: Rename onPendingResult
+            } else {
+              plugin.onFinish?.(transcript); // TODO: Rename onConfirm
+            }
+          });
+          if (!interim) {
             insertInput(transcript);
           }
         },

@@ -11,7 +11,7 @@ export type VoiceRecognizerInstance = [
   state: number,
   finalTranscript: string,
   interimTranscript: string,
-  onResult?: (transcript: string, interim?: boolean) => void,
+  onResult?: (transcript: string, interim: boolean) => void,
   onStateChange?: (state: number) => void,
   onError?: (error: SpeechRecognitionErrorEvent) => void,
 ];
