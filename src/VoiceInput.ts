@@ -1,11 +1,12 @@
 import { focusElement, isTextField } from './DOM';
 import type { VoiceRecognizerInstance } from './VoiceRecognizer';
 import {
+  STATE_STARTED,
   voiceRecognizerConfirm,
   voiceRecognizerNew,
   voiceRecognizerStart,
+  voiceRecognizerState,
   voiceRecognizerStop,
-  voiceRecognizerStopped,
 } from './VoiceRecognizer';
 
 export interface VoiceInputPlugin {
@@ -64,9 +65,9 @@ export class VoiceInput {
             insertInput(transcript);
           }
         },
-        (isStopped): void => {
+        (state): void => {
           this.P.forEach((plugin) => {
-            plugin.onStateChange?.({ recording: !isStopped });
+            plugin.onStateChange?.({ recording: state === STATE_STARTED });
           });
         },
       );
@@ -84,7 +85,7 @@ export class VoiceInput {
   }
 
   recording(): boolean | null {
-    return this.R ? !voiceRecognizerStopped(this.R) : null;
+    return this.R ? voiceRecognizerState(this.R) === STATE_STARTED : null;
   }
 
   start(): void {

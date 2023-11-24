@@ -8,24 +8,28 @@ export const VoiceRecognition =
 
 export type VoiceRecognizerInstance = [
   recognition: SpeechRecognition,
-  isStopped: boolean,
+  state: number,
   finalTranscript: string,
   interimTranscript: string,
   onResult?: (transcript: string, interim?: boolean) => void,
-  onStateChange?: (isStopped: boolean) => void,
+  onStateChange?: (state: number) => void,
 ];
 
 const kRecognition = 0;
-const kIsStopped = 1;
+const kState = 1;
 const kFinalTranscript = 2;
 const kInterimTranscript = 3;
 const kOnResult = 4;
 const kOnStateChange = 5;
 
-function voiceRecognizerStateChange(instance: VoiceRecognizerInstance, isStopped: boolean): void {
-  if (instance[kIsStopped] !== isStopped) {
-    instance[kIsStopped] = isStopped;
-    instance[kOnStateChange]?.(isStopped);
+export const STATE_UNSTARTED = -1;
+export const STATE_STARTED = 0;
+export const STATE_STOPPED = 1;
+
+function voiceRecognizerStateChange(instance: VoiceRecognizerInstance, state: number): void {
+  if (instance[kState] !== state) {
+    instance[kState] = state;
+    instance[kOnStateChange]?.(state);
   }
 }
 
@@ -36,7 +40,14 @@ export function voiceRecognizerNew(
 ): VoiceRecognizerInstance {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const recognition = new VoiceRecognition!();
-  const instance: VoiceRecognizerInstance = [recognition, true, '', '', onResult, onStateChange];
+  const instance: VoiceRecognizerInstance = [
+    recognition,
+    STATE_UNSTARTED,
+    '',
+    '',
+    onResult,
+    onStateChange,
+  ];
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.maxAlternatives = 1;
@@ -64,38 +75,41 @@ export function voiceRecognizerNew(
   };
   recognition.onend = (): void => {
     // Continues the recognition unless explicitly stopped by the user.
-    if (!instance[kIsStopped]) instance[kRecognition].start();
+    if (instance[kState] === STATE_STARTED) instance[kRecognition].start();
   };
   recognition.onerror = (event): void => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     console.error(`${VoiceRecognition!.name} error: ${event.error}`);
-    voiceRecognizerStateChange(instance, true);
+    voiceRecognizerStateChange(instance, STATE_STOPPED);
   };
   return instance;
 }
 
 export function voiceRecognizerStart(instance: VoiceRecognizerInstance): void {
-  if (instance[kIsStopped]) {
-    voiceRecognizerStateChange(instance, false);
+  if (instance[kState] !== STATE_STARTED) {
+    voiceRecognizerStateChange(instance, STATE_STARTED);
     instance[kRecognition].start();
   }
 }
 
-export function voiceRecognizerStopped(instance: VoiceRecognizerInstance): boolean {
-  return instance[kIsStopped];
+export function voiceRecognizerState(instance: VoiceRecognizerInstance): number {
+  return instance[kState];
 }
 
 export function voiceRecognizerStop(instance: VoiceRecognizerInstance): void {
-  if (!instance[kIsStopped]) {
+  if (instance[kState] === STATE_STARTED) {
     instance[kFinalTranscript] = '';
     instance[kInterimTranscript] = '';
-    voiceRecognizerStateChange(instance, true);
+    voiceRecognizerStateChange(instance, STATE_STOPPED);
     instance[kRecognition].stop();
   }
 }
 
 export function voiceRecognizerConfirm(instance: VoiceRecognizerInstance): void {
-  if (!instance[kIsStopped] && (instance[kFinalTranscript] || instance[kInterimTranscript])) {
+  if (
+    instance[kState] === STATE_STARTED &&
+    (instance[kFinalTranscript] || instance[kInterimTranscript])
+  ) {
     instance[kRecognition].stop(); // `onresult` is called.
   }
 }
