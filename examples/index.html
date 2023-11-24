@@ -23,12 +23,23 @@
     <div>
       <div contenteditable>contenteditable</div>
     </div>
+    <h2>React</h2>
     <div id="react"></div>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <h2>Vue</h2>
+    <div id="vue">
+      <textarea v-model="value"></textarea>
+      <pre>{{ result }}</pre>
+    </div>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
     <script>
-      const Echo = () => {
+      const App = () => {
         const [value, setValue] = React.useState('react controlled');
+        const [html, setHtml] = React.useState('react contenteditable');
+        const defaultHtml = React.useRef(html);
         return React.createElement(
           React.Fragment,
           {},
@@ -38,10 +49,32 @@
               setValue(evt.target.value);
             },
           }),
-          React.createElement('div', {}, value),
+          React.createElement('div', {
+            contentEditable: true,
+            onInput: (evt) => {
+              setHtml(evt.target.innerHTML);
+            },
+            dangerouslySetInnerHTML: { __html: defaultHtml.current },
+          }),
+          React.createElement('pre', {}, JSON.stringify({ value, html }, null, '  ')),
         );
       };
-      ReactDOM.createRoot(document.getElementById('react')).render(React.createElement(Echo));
+      ReactDOM.createRoot(document.getElementById('react')).render(React.createElement(App));
+    </script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+      Vue.createApp({
+        data() {
+          return {
+            value: 'vue binding',
+          };
+        },
+        computed: {
+          result() {
+            return JSON.stringify({ value: this.value }, null, '  ');
+          },
+        },
+      }).mount('#vue');
     </script>
     <script type="module">
       import { setup } from '../src';
