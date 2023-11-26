@@ -8,17 +8,17 @@ import { VoiceRecognition, voiceRecognizerConfirm } from './VoiceRecognizer';
 let instance: VoiceInput | undefined;
 
 export interface SetupOptions extends Partial<VoiceInputOptions> {
-  insertInput?: (text: string) => boolean;
-  modal?: boolean;
+  insertInput?: ((text: string) => boolean) | null; // TODO: Rename insertText
+  modal?: { className?: string; style?: Partial<CSSStyleDeclaration> } | boolean; // TODO: Rename composeModal
   modalProps?: {
     className?: string;
     style?: Partial<CSSStyleDeclaration>;
   };
-  keyboardShortcut?: string;
-  keyboardShortcutPressing?: boolean;
-  confirmKeyboarShortcut?: string;
-  buttonShortcutAttribute?: string;
-  buttonShortcutFocusAttribute?: string;
+  keyboardShortcut?: string | null;
+  keyboardShortcutPressing?: boolean; // TODO: Rename keyboardShortcutLongPressMode
+  confirmKeyboarShortcut?: string | null;
+  buttonShortcutAttribute?: string | null; // TODO: Rename toggleButtonAttribute
+  buttonShortcutFocusAttribute?: string | null; // TODO: Rename toggleButtonFocusAttribute
 }
 
 const defaultInsertInput: NonNullable<SetupOptions['insertInput']> = (text) => {
@@ -62,8 +62,8 @@ export function setup({
   modal = true,
   modalProps = defaultModalProps,
   keyboardShortcut = 'Alt+v',
-  keyboardShortcutPressing,
-  confirmKeyboarShortcut,
+  keyboardShortcutPressing = false,
+  confirmKeyboarShortcut = null,
   buttonShortcutAttribute = 'data-voice-input',
   buttonShortcutFocusAttribute = 'data-voice-input-focus',
 }: SetupOptions = {}): VoiceInput {
@@ -72,9 +72,10 @@ export function setup({
     lang,
     plugins: [
       ...plugins,
-      { onFinish: insertInput },
+      insertInput ? { onFinish: insertInput } : null,
       modal
         ? (): VoiceInputPlugin => {
+            const props = typeof modal === 'object' ? modal : modalProps ?? defaultModalProps;
             let div: HTMLDivElement | undefined;
             return {
               dispose: (): void => {
@@ -82,8 +83,8 @@ export function setup({
               },
               onUpdate: (transcript): void => {
                 div ??= document.body.appendChild(document.createElement('div'));
-                if (modalProps?.className) div.className = modalProps.className;
-                Object.assign(div.style, { display: 'block', ...modalProps?.style });
+                if (props?.className) div.className = props.className;
+                Object.assign(div.style, { display: 'block', ...props?.style });
                 div.textContent = transcript;
               },
               onFinish: (): void => {
@@ -107,15 +108,14 @@ export function setup({
       keyboardShortcut && keyboardShortcutPressing
         ? (v): VoiceInputPlugin => {
             const disposeKeydown = registerGlobalEvent('keydown', (evt) => {
-              if (v.recording()) {
-                if (!equalEventKey(keyboardShortcut, evt)) {
-                  v.stop();
-                }
-                return true;
-              }
               if (equalEventKey(keyboardShortcut, evt)) {
-                v.start();
+                if (!v.recording()) {
+                  v.start();
+                }
                 return false;
+              }
+              if (v.recording()) {
+                v.stop();
               }
               return true;
             });
