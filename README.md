@@ -53,6 +53,8 @@ function setup(options: {
   lang?: string; // = navigator.language
   // Text insert callback.
   insertText?: (text: string) => boolean;
+  // Enable interim text insertion.
+  insertInterimTextMode?: boolean; // = false
   // Spectfying an attribute to update when change voice input state.
   stateAttribute?: string; // = 'data-voice-input',
   // Enable speech modal.

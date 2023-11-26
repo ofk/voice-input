@@ -7,6 +7,12 @@ import { VoiceRecognition, voiceRecognizerConfirm } from './VoiceRecognizer';
 
 let instance: VoiceInput | undefined;
 
+interface InsertInterimTextProps {
+  insertText?: (text: string) => void;
+  undo?: () => void;
+  forceStackHistory?: () => void;
+}
+
 interface ComposeModalProps {
   className?: string;
   style?: Partial<CSSStyleDeclaration>;
@@ -14,6 +20,7 @@ interface ComposeModalProps {
 
 export interface SetupOptions extends Partial<VoiceInputOptions> {
   insertText?: ((text: string) => boolean) | null;
+  insertInterimTextMode?: InsertInterimTextProps | boolean;
   stateAttribute?: string | null;
   composeModal?: ComposeModalProps | boolean;
   keyboardShortcut?: string | null;
@@ -23,12 +30,36 @@ export interface SetupOptions extends Partial<VoiceInputOptions> {
   toggleButtonFocusAttribute?: string | null;
 }
 
-const defaultInsertText: NonNullable<SetupOptions['insertText']> = (text) => {
+// It works with React controlled element.
+const defaultInsertText = (text: string): boolean => {
   const elem = document.activeElement as HTMLElement | null;
-  // It works with React controlled element.
   if (elem && (isTextField(elem) || elem.contentEditable)) {
-    focusElement(elem);
     return elem.ownerDocument.execCommand('insertText', false, text);
+  }
+  return false;
+};
+
+const defaultUndo = (): boolean => {
+  const elem = document.activeElement as HTMLElement | null;
+  if (elem && (isTextField(elem) || elem.contentEditable)) {
+    return elem.ownerDocument.execCommand('undo');
+  }
+  return false;
+};
+
+const defaultForceStackHistory = (): boolean => {
+  const elem = document.activeElement as HTMLElement | null;
+  if (elem) {
+    if (isTextField(elem)) {
+      elem.setSelectionRange(elem.selectionStart, elem.selectionEnd);
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const selection = window.getSelection()!;
+      const range = selection.getRangeAt(0).cloneRange();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    return true;
   }
   return false;
 };
@@ -61,6 +92,7 @@ export function setup({
   lang = navigator.language,
   plugins = [],
   insertText = defaultInsertText,
+  insertInterimTextMode = false,
   stateAttribute = 'data-voice-input',
   composeModal = true,
   keyboardShortcut = 'Alt+v',
@@ -75,6 +107,33 @@ export function setup({
     plugins: [
       ...plugins,
       insertText ? { onFinish: insertText } : null,
+      insertInterimTextMode
+        ? (): VoiceInputPlugin => {
+            const {
+              insertText: insertInterimText = insertText ?? defaultInsertText,
+              undo: undoInterimText = defaultUndo,
+              forceStackHistory: forceStackHistoryInterimText = defaultForceStackHistory,
+            } = typeof insertInterimTextMode === 'object' ? insertInterimTextMode : {};
+            let updated = false;
+            return {
+              onUpdate: (transcript): void => {
+                if (!updated) {
+                  updated = true;
+                  forceStackHistoryInterimText();
+                } else {
+                  undoInterimText();
+                }
+                insertInterimText(transcript);
+              },
+              onFinish: (): void => {
+                if (updated) {
+                  updated = false;
+                  undoInterimText();
+                }
+              },
+            };
+          }
+        : null,
       stateAttribute
         ? {
             onStateChange: (state): void => {
