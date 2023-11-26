@@ -14,6 +14,7 @@ interface ComposeModalProps {
 
 export interface SetupOptions extends Partial<VoiceInputOptions> {
   insertText?: ((text: string) => boolean) | null;
+  stateAttribute?: string | null;
   composeModal?: ComposeModalProps | boolean;
   keyboardShortcut?: string | null;
   keyboardShortcutLongPressMode?: boolean;
@@ -60,6 +61,7 @@ export function setup({
   lang = navigator.language,
   plugins = [],
   insertText = defaultInsertText,
+  stateAttribute = 'data-voice-input',
   composeModal = true,
   keyboardShortcut = 'Alt+v',
   keyboardShortcutLongPressMode = false,
@@ -73,6 +75,15 @@ export function setup({
     plugins: [
       ...plugins,
       insertText ? { onFinish: insertText } : null,
+      stateAttribute
+        ? {
+            onStateChange: (state): void => {
+              document.querySelectorAll(`[${stateAttribute}]`).forEach((elem) => {
+                elem.setAttribute(stateAttribute, state.recording ? 'recording' : 'stopped');
+              });
+            },
+          }
+        : null,
       composeModal
         ? (): VoiceInputPlugin => {
             const props = typeof composeModal === 'object' ? composeModal : defaultModalProps;
@@ -164,17 +175,7 @@ export function setup({
               }
               return true;
             });
-            return {
-              dispose,
-              onStateChange: (state): void => {
-                document.querySelectorAll(`[${toggleButtonAttribute}]`).forEach((elem) => {
-                  elem.setAttribute(
-                    toggleButtonAttribute,
-                    state.recording ? 'recording' : 'stopped',
-                  );
-                });
-              },
-            };
+            return { dispose };
           }
         : null,
     ],
