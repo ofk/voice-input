@@ -7,21 +7,22 @@ import { VoiceRecognition, voiceRecognizerConfirm } from './VoiceRecognizer';
 
 let instance: VoiceInput | undefined;
 
-export interface SetupOptions extends Partial<VoiceInputOptions> {
-  insertInput?: ((text: string) => boolean) | null; // TODO: Rename insertText
-  modal?: { className?: string; style?: Partial<CSSStyleDeclaration> } | boolean; // TODO: Rename composeModal
-  modalProps?: {
-    className?: string;
-    style?: Partial<CSSStyleDeclaration>;
-  };
-  keyboardShortcut?: string | null;
-  keyboardShortcutPressing?: boolean; // TODO: Rename keyboardShortcutLongPressMode
-  confirmKeyboarShortcut?: string | null;
-  buttonShortcutAttribute?: string | null; // TODO: Rename toggleButtonAttribute
-  buttonShortcutFocusAttribute?: string | null; // TODO: Rename toggleButtonFocusAttribute
+interface ComposeModalProps {
+  className?: string;
+  style?: Partial<CSSStyleDeclaration>;
 }
 
-const defaultInsertInput: NonNullable<SetupOptions['insertInput']> = (text) => {
+export interface SetupOptions extends Partial<VoiceInputOptions> {
+  insertText?: ((text: string) => boolean) | null;
+  composeModal?: ComposeModalProps | boolean;
+  keyboardShortcut?: string | null;
+  keyboardShortcutLongPressMode?: boolean;
+  confirmKeyboarShortcut?: string | null;
+  toggleButtonAttribute?: string | null;
+  toggleButtonFocusAttribute?: string | null;
+}
+
+const defaultInsertText: NonNullable<SetupOptions['insertText']> = (text) => {
   const elem = document.activeElement as HTMLElement | null;
   // It works with React controlled element.
   if (elem && (isTextField(elem) || elem.contentEditable)) {
@@ -31,7 +32,7 @@ const defaultInsertInput: NonNullable<SetupOptions['insertInput']> = (text) => {
   return false;
 };
 
-const defaultModalProps: SetupOptions['modalProps'] = {
+const defaultModalProps: ComposeModalProps = {
   className: 'voice-input-modal',
   style: {
     position: 'fixed',
@@ -58,24 +59,23 @@ const defaultModalProps: SetupOptions['modalProps'] = {
 export function setup({
   lang = navigator.language,
   plugins = [],
-  insertInput = defaultInsertInput,
-  modal = true,
-  modalProps = defaultModalProps,
+  insertText = defaultInsertText,
+  composeModal = true,
   keyboardShortcut = 'Alt+v',
-  keyboardShortcutPressing = false,
+  keyboardShortcutLongPressMode = false,
   confirmKeyboarShortcut = null,
-  buttonShortcutAttribute = 'data-voice-input',
-  buttonShortcutFocusAttribute = 'data-voice-input-focus',
+  toggleButtonAttribute = 'data-voice-input',
+  toggleButtonFocusAttribute = 'data-voice-input-focus',
 }: SetupOptions = {}): VoiceInput {
   instance?.dispose();
   instance = new VoiceInput({
     lang,
     plugins: [
       ...plugins,
-      insertInput ? { onFinish: insertInput } : null,
-      modal
+      insertText ? { onFinish: insertText } : null,
+      composeModal
         ? (): VoiceInputPlugin => {
-            const props = typeof modal === 'object' ? modal : modalProps ?? defaultModalProps;
+            const props = typeof composeModal === 'object' ? composeModal : defaultModalProps;
             let div: HTMLDivElement | undefined;
             return {
               dispose: (): void => {
@@ -83,8 +83,8 @@ export function setup({
               },
               onUpdate: (transcript): void => {
                 div ??= document.body.appendChild(document.createElement('div'));
-                if (props?.className) div.className = props.className;
-                Object.assign(div.style, { display: 'block', ...props?.style });
+                if (props.className) div.className = props.className;
+                Object.assign(div.style, { display: 'block', ...props.style });
                 div.textContent = transcript;
               },
               onFinish: (): void => {
@@ -93,7 +93,7 @@ export function setup({
             };
           }
         : null,
-      keyboardShortcut && !keyboardShortcutPressing
+      keyboardShortcut && !keyboardShortcutLongPressMode
         ? (v): VoiceInputPlugin => {
             const dispose = registerGlobalEvent('keydown', (evt) => {
               if (equalEventKey(keyboardShortcut, evt)) {
@@ -105,7 +105,7 @@ export function setup({
             return { dispose };
           }
         : null,
-      keyboardShortcut && keyboardShortcutPressing
+      keyboardShortcut && keyboardShortcutLongPressMode
         ? (v): VoiceInputPlugin => {
             const disposeKeydown = registerGlobalEvent('keydown', (evt) => {
               if (equalEventKey(keyboardShortcut, evt)) {
@@ -144,15 +144,15 @@ export function setup({
             return { dispose };
           }
         : null,
-      buttonShortcutAttribute
+      toggleButtonAttribute
         ? (v): VoiceInputPlugin => {
             const dispose = registerGlobalEvent('click', (event) => {
               // In the case of `<button><span/><button>`, event.target would be the HTMLSpanElement.
-              if ((event.target as Element).closest(`[${buttonShortcutAttribute}]`)) {
+              if ((event.target as Element).closest(`[${toggleButtonAttribute}]`)) {
                 v.toggle();
-                if (buttonShortcutFocusAttribute && v.recording()) {
+                if (toggleButtonFocusAttribute && v.recording()) {
                   const selector = (event.target as Element).getAttribute(
-                    buttonShortcutFocusAttribute,
+                    toggleButtonFocusAttribute,
                   );
                   const focusElem = selector && document.querySelector<HTMLElement>(selector);
                   if (focusElem) {
@@ -166,9 +166,9 @@ export function setup({
             return {
               dispose,
               onStateChange: (state): void => {
-                document.querySelectorAll(`[${buttonShortcutAttribute}]`).forEach((elem) => {
+                document.querySelectorAll(`[${toggleButtonAttribute}]`).forEach((elem) => {
                   elem.setAttribute(
-                    buttonShortcutAttribute,
+                    toggleButtonAttribute,
                     state.recording ? 'recording' : 'stopped',
                   );
                 });
