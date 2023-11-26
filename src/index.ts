@@ -148,12 +148,13 @@ export function setup({
         ? (v): VoiceInputPlugin => {
             const dispose = registerGlobalEvent('click', (event) => {
               // In the case of `<button><span/><button>`, event.target would be the HTMLSpanElement.
-              if ((event.target as Element).closest(`[${toggleButtonAttribute}]`)) {
+              const actionElement = (event.target as Element).closest(
+                'a[href],button,input[type="button"]',
+              );
+              if (actionElement?.closest(`[${toggleButtonAttribute}]`)) {
                 v.toggle();
                 if (toggleButtonFocusAttribute && v.recording()) {
-                  const selector = (event.target as Element).getAttribute(
-                    toggleButtonFocusAttribute,
-                  );
+                  const selector = actionElement.getAttribute(toggleButtonFocusAttribute);
                   const focusElem = selector && document.querySelector<HTMLElement>(selector);
                   if (focusElem) {
                     focusElement(focusElem);
