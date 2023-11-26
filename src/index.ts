@@ -106,7 +106,6 @@ export function setup({
     lang,
     plugins: [
       ...plugins,
-      insertText ? { onFinish: insertText } : null,
       insertInterimTextMode
         ? (): VoiceInputPlugin => {
             const {
@@ -134,6 +133,7 @@ export function setup({
             };
           }
         : null,
+      insertText ? { onFinish: insertText } : null,
       stateAttribute
         ? {
             onStateChange: (state): void => {
