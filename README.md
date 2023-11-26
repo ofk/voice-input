@@ -51,24 +51,30 @@ This will set up the voice input feature and you will be able to use voice input
 function setup(options: {
   // Supported language.
   lang?: string; // = navigator.language
+  // Text insert callback.
+  insertText?: (text: string) => boolean;
+  // Enable interim text insertion.
+  insertInterimTextMode?: boolean; // = false
+  // Spectfying an attribute to update when change voice input state.
+  stateAttribute?: string; // = 'data-voice-input',
   // Enable speech modal.
-  modal?: boolean; // = true
-  // Properties of speech modal.
-  modalProps?: {
-    className?: string;
-    style?: Partial<CSSStyleDeclaration>;
-  };
+  composeModal?:
+    | {
+        className?: string;
+        style?: Partial<CSSStyleDeclaration>;
+      }
+    | boolean; // = true
   // Specifying a keyboard shortcuts. Disable with empty string.
   // Uppercase letter requires shift key (ex. Alt+V = Alt+Shift+v).
   keyboardShortcut?: string; // = 'Alt+v'
   // Activate when pressing the key.
-  keyboardShortcutPressing?: boolean; // = false
+  keyboardShortcutLongPressMode?: boolean; // = false
   // Specifying a keyboard shortcut to confirm input. Disable with empty string.
   confirmKeyboarShortcut?: string; // = ''
-  // Spectfying a button selector to toggle voice input.
-  buttonShortcutAttribute?: string; // = 'data-voice-input',
-  // Spectfying a button selector to focus a text area.
-  buttonShortcutFocusAttribute?: string; // = 'data-voice-input-focus',
+  // Spectfying a button attribute to toggle voice input.
+  toggleButtonAttribute?: string; // = 'data-voice-input',
+  // Spectfying a button attribute to focus a text area.
+  toggleButtonFocusAttribute?: string; // = 'data-voice-input-focus',
   // Plugin. For specific usage, please refer to src/VoiceInput.ts.
   plugins?: {
     dispose?: () => void;

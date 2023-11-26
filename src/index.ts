@@ -1,26 +1,70 @@
 import { equalEventKey } from 'dom-event-key';
 
-import { focusElement, registerGlobalEvent } from './DOM';
+import { focusElement, isTextField, registerGlobalEvent } from './DOM';
 import type { VoiceInputOptions, VoiceInputPlugin } from './VoiceInput';
-import { VoiceInput, kInsertInput, kLang, kPlugins } from './VoiceInput';
+import { VoiceInput } from './VoiceInput';
 import { VoiceRecognition, voiceRecognizerConfirm } from './VoiceRecognizer';
 
 let instance: VoiceInput | undefined;
 
-export interface SetupOptions extends Partial<VoiceInputOptions> {
-  modal?: boolean;
-  modalProps?: {
-    className?: string;
-    style?: Partial<CSSStyleDeclaration>;
-  };
-  keyboardShortcut?: string;
-  keyboardShortcutPressing?: boolean;
-  confirmKeyboarShortcut?: string;
-  buttonShortcutAttribute?: string;
-  buttonShortcutFocusAttribute?: string;
+interface InsertInterimTextProps {
+  insertText?: (text: string) => void;
+  undo?: () => void;
+  forceStackHistory?: () => void;
 }
 
-const defaultModalProps: SetupOptions['modalProps'] = {
+interface ComposeModalProps {
+  className?: string;
+  style?: Partial<CSSStyleDeclaration>;
+}
+
+export interface SetupOptions extends Partial<VoiceInputOptions> {
+  insertText?: ((text: string) => boolean) | null;
+  insertInterimTextMode?: InsertInterimTextProps | boolean;
+  stateAttribute?: string | null;
+  composeModal?: ComposeModalProps | boolean;
+  keyboardShortcut?: string | null;
+  keyboardShortcutLongPressMode?: boolean;
+  confirmKeyboarShortcut?: string | null;
+  toggleButtonAttribute?: string | null;
+  toggleButtonFocusAttribute?: string | null;
+}
+
+// It works with React controlled element.
+const defaultInsertText = (text: string): boolean => {
+  const elem = document.activeElement as HTMLElement | null;
+  if (elem && (isTextField(elem) || elem.contentEditable)) {
+    return elem.ownerDocument.execCommand('insertText', false, text);
+  }
+  return false;
+};
+
+const defaultUndo = (): boolean => {
+  const elem = document.activeElement as HTMLElement | null;
+  if (elem && (isTextField(elem) || elem.contentEditable)) {
+    return elem.ownerDocument.execCommand('undo');
+  }
+  return false;
+};
+
+const defaultForceStackHistory = (): boolean => {
+  const elem = document.activeElement as HTMLElement | null;
+  if (elem) {
+    if (isTextField(elem)) {
+      elem.setSelectionRange(elem.selectionStart, elem.selectionEnd);
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const selection = window.getSelection()!;
+      const range = selection.getRangeAt(0).cloneRange();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    return true;
+  }
+  return false;
+};
+
+const defaultModalProps: ComposeModalProps = {
   className: 'voice-input-modal',
   style: {
     position: 'fixed',
@@ -45,25 +89,63 @@ const defaultModalProps: SetupOptions['modalProps'] = {
 };
 
 export function setup({
-  [kLang]: lang = navigator.language,
-  [kInsertInput]: insertInput,
-  [kPlugins]: plugins = [],
-  modal = true,
-  modalProps = defaultModalProps,
+  lang = navigator.language,
+  plugins = [],
+  insertText = defaultInsertText,
+  insertInterimTextMode = false,
+  stateAttribute = 'data-voice-input',
+  composeModal = true,
   keyboardShortcut = 'Alt+v',
-  keyboardShortcutPressing,
-  confirmKeyboarShortcut,
-  buttonShortcutAttribute = 'data-voice-input',
-  buttonShortcutFocusAttribute = 'data-voice-input-focus',
+  keyboardShortcutLongPressMode = false,
+  confirmKeyboarShortcut = null,
+  toggleButtonAttribute = 'data-voice-input',
+  toggleButtonFocusAttribute = 'data-voice-input-focus',
 }: SetupOptions = {}): VoiceInput {
   instance?.dispose();
   instance = new VoiceInput({
-    [kLang]: lang,
-    [kInsertInput]: insertInput,
-    [kPlugins]: [
+    lang,
+    plugins: [
       ...plugins,
-      modal
+      insertText ? { onFinish: insertText } : null,
+      insertInterimTextMode
         ? (): VoiceInputPlugin => {
+            const {
+              insertText: insertInterimText = insertText ?? defaultInsertText,
+              undo: undoInterimText = defaultUndo,
+              forceStackHistory: forceStackHistoryInterimText = defaultForceStackHistory,
+            } = typeof insertInterimTextMode === 'object' ? insertInterimTextMode : {};
+            let updated = false;
+            return {
+              onUpdate: (transcript): void => {
+                if (!updated) {
+                  updated = true;
+                  forceStackHistoryInterimText();
+                } else {
+                  undoInterimText();
+                }
+                insertInterimText(transcript);
+              },
+              onFinish: (): void => {
+                if (updated) {
+                  updated = false;
+                  undoInterimText();
+                }
+              },
+            };
+          }
+        : null,
+      stateAttribute
+        ? {
+            onStateChange: (state): void => {
+              document.querySelectorAll(`[${stateAttribute}]`).forEach((elem) => {
+                elem.setAttribute(stateAttribute, state.recording ? 'recording' : 'stopped');
+              });
+            },
+          }
+        : null,
+      composeModal
+        ? (): VoiceInputPlugin => {
+            const props = typeof composeModal === 'object' ? composeModal : defaultModalProps;
             let div: HTMLDivElement | undefined;
             return {
               dispose: (): void => {
@@ -71,8 +153,8 @@ export function setup({
               },
               onUpdate: (transcript): void => {
                 div ??= document.body.appendChild(document.createElement('div'));
-                if (modalProps?.className) div.className = modalProps.className;
-                Object.assign(div.style, { display: 'block', ...modalProps?.style });
+                if (props.className) div.className = props.className;
+                Object.assign(div.style, { display: 'block', ...props.style });
                 div.textContent = transcript;
               },
               onFinish: (): void => {
@@ -81,7 +163,7 @@ export function setup({
             };
           }
         : null,
-      keyboardShortcut && !keyboardShortcutPressing
+      keyboardShortcut && !keyboardShortcutLongPressMode
         ? (v): VoiceInputPlugin => {
             const dispose = registerGlobalEvent('keydown', (evt) => {
               if (equalEventKey(keyboardShortcut, evt)) {
@@ -93,18 +175,17 @@ export function setup({
             return { dispose };
           }
         : null,
-      keyboardShortcut && keyboardShortcutPressing
+      keyboardShortcut && keyboardShortcutLongPressMode
         ? (v): VoiceInputPlugin => {
             const disposeKeydown = registerGlobalEvent('keydown', (evt) => {
-              if (v.recording()) {
-                if (!equalEventKey(keyboardShortcut, evt)) {
-                  v.stop();
-                }
-                return true;
-              }
               if (equalEventKey(keyboardShortcut, evt)) {
-                v.start();
+                if (!v.recording()) {
+                  v.start();
+                }
                 return false;
+              }
+              if (v.recording()) {
+                v.stop();
               }
               return true;
             });
@@ -133,16 +214,17 @@ export function setup({
             return { dispose };
           }
         : null,
-      buttonShortcutAttribute
+      toggleButtonAttribute
         ? (v): VoiceInputPlugin => {
             const dispose = registerGlobalEvent('click', (event) => {
               // In the case of `<button><span/><button>`, event.target would be the HTMLSpanElement.
-              if ((event.target as Element).closest(`[${buttonShortcutAttribute}]`)) {
+              const actionElement = (event.target as Element).closest(
+                'a[href],button,input[type="button"]',
+              );
+              if (actionElement?.closest(`[${toggleButtonAttribute}]`)) {
                 v.toggle();
-                if (buttonShortcutFocusAttribute && v.recording()) {
-                  const selector = (event.target as Element).getAttribute(
-                    buttonShortcutFocusAttribute,
-                  );
+                if (toggleButtonFocusAttribute && v.recording()) {
+                  const selector = actionElement.getAttribute(toggleButtonFocusAttribute);
                   const focusElem = selector && document.querySelector<HTMLElement>(selector);
                   if (focusElem) {
                     focusElement(focusElem);
@@ -152,17 +234,7 @@ export function setup({
               }
               return true;
             });
-            return {
-              dispose,
-              onStateChange: (state): void => {
-                document.querySelectorAll(`[${buttonShortcutAttribute}]`).forEach((elem) => {
-                  elem.setAttribute(
-                    buttonShortcutAttribute,
-                    state.recording ? 'recording' : 'stopped',
-                  );
-                });
-              },
-            };
+            return { dispose };
           }
         : null,
     ],
